@@ -16,6 +16,7 @@ h1 { font-size: clamp(2.2rem, 6vw, 4.4rem); letter-spacing: -0.06em; line-height
 .music-panel { align-items: center; display: flex; justify-content: space-between; margin-bottom: 18px; padding: 16px 22px; }
 .section-label { color: #5267d9; font-size: .68rem; font-weight: 800; letter-spacing: .14em; margin: 0 0 4px; }
 .music-description { color: #8792a6; font-size: .78rem; margin: 5px 0 0; }
+.music-lyrics { color: #5267d9; font-size: .95rem; font-weight: 700; margin: 10px 0 0; min-height: 1.3em; }
 .music-controls { align-items: center; display: flex; gap: 14px; }
 .volume-control { align-items: center; display: flex; gap: 8px; white-space: nowrap; }
 .volume-control input { accent-color: #5267d9; padding: 0; width: 100px; }

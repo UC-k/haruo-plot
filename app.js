@@ -7,6 +7,7 @@ const status = document.querySelector("#status");
 const musicToggle = document.querySelector("#music-toggle");
 const musicVolume = document.querySelector("#music-volume");
 const musicStatus = document.querySelector("#music-status");
+const musicLyrics = document.querySelector("#music-lyrics");
 const fields = ["min-x", "max-x", "min-y", "max-y"].map((id) => document.querySelector(`#${id}`));
 const colors = ["#5267d9", "#e05d75", "#21a179", "#ed9b40", "#8c5dcc"];
 const defaultView = [-10, 10, -5, 5];
@@ -17,6 +18,16 @@ let audioContext = null;
 let masterGain = null;
 let musicTimer = null;
 let musicStep = 0;
+const melody = [
+  { text: "数の海を", note: 261.63, vowel: "u" },
+  { text: "越えてゆこう", note: 293.66, vowel: "e" },
+  { text: "グラフの星が", note: 329.63, vowel: "a" },
+  { text: "ひかりだす", note: 392.0, vowel: "i" },
+  { text: "点と線を", note: 329.63, vowel: "o" },
+  { text: "つないだら", note: 392.0, vowel: "a" },
+  { text: "未来のかたち", note: 440.0, vowel: "i" },
+  { text: "見えてくる", note: 523.25, vowel: "u" },
+];
 
 function normalizeExpression(source) {
   let expression = source.trim().replace(/^\s*y\s*=\s*/i, "").replaceAll("^", "**");
@@ -149,13 +160,50 @@ function playTone(frequency, duration, startTime, type = "sine") {
   oscillator.stop(startTime + duration + 0.03);
 }
 
+function playVocal(frequency, duration, startTime, vowel) {
+  const formants = { a: [800, 1150], i: [350, 2200], u: [325, 700], e: [500, 1900], o: [450, 800] };
+  const [firstFormant, secondFormant] = formants[vowel] || formants.a;
+  const fundamental = audioContext.createOscillator();
+  const fundamentalGain = audioContext.createGain();
+  fundamental.type = "sawtooth";
+  fundamental.frequency.value = frequency;
+  fundamentalGain.gain.setValueAtTime(0.0001, startTime);
+  fundamentalGain.gain.exponentialRampToValueAtTime(0.055, startTime + 0.035);
+  fundamentalGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  fundamental.connect(fundamentalGain);
+  fundamentalGain.connect(masterGain);
+  [firstFormant, secondFormant].forEach((formant, index) => {
+    const oscillator = audioContext.createOscillator();
+    const filter = audioContext.createBiquadFilter();
+    const gain = audioContext.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency * (index + 2);
+    filter.type = "bandpass";
+    filter.frequency.value = formant;
+    filter.Q.value = 7;
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(index === 0 ? 0.08 : 0.045, startTime + 0.035);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    oscillator.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + 0.03);
+  });
+  fundamental.start(startTime);
+  fundamental.stop(startTime + duration + 0.03);
+}
+
 function scheduleMusicStep() {
   const fibonacci = [1, 1, 2, 3, 5, 8, 13, 21];
   const scale = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33];
   const note = scale[fibonacci[musicStep % fibonacci.length] % scale.length];
+  const vocal = melody[musicStep % melody.length];
   const now = audioContext.currentTime;
   playTone(note, 0.25, now, "triangle");
   if (musicStep % 4 === 0) playTone(note / 2, 0.45, now, "sine");
+  playVocal(vocal.note, 0.27, now, vocal.vowel);
+  musicLyrics.textContent = `♪ ${vocal.text}`;
   musicStep += 1;
 }
 
@@ -167,6 +215,7 @@ async function toggleMusic() {
       musicTimer = null;
       musicToggle.textContent = "BGMを再生";
       musicStatus.textContent = "停止中";
+      musicLyrics.textContent = "♪ 再生ボタンで歌が始まります";
       return;
     }
     await context.resume();
