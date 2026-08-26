@@ -2,16 +2,25 @@ const canvas = document.querySelector("#graph");
 const ctx = canvas.getContext("2d");
 const form = document.querySelector("#plot-form");
 const expressionInput = document.querySelector("#expression");
+const expressionList = document.querySelector("#expression-list");
 const status = document.querySelector("#status");
 const fields = ["min-x", "max-x", "min-y", "max-y"].map((id) => document.querySelector(`#${id}`));
+const colors = ["#5267d9", "#e05d75", "#21a179", "#ed9b40", "#8c5dcc"];
 const defaultView = [-10, 10, -5, 5];
 let view = [...defaultView];
-let fn = compileExpression(expressionInput.value);
+let functions = [];
+let dragStart = null;
+
+function normalizeExpression(source) {
+  let expression = source.trim().replace(/^\s*y\s*=\s*/i, "").replaceAll("^", "**");
+  expression = expression.replace(/(\d+(?:\.\d+)?|x|\))(?=(x|\d|\(|sin|cos|tan|sqrt|abs|log|exp|floor|ceil|round|PI|E))/g, "$1*");
+  return expression;
+}
 
 function compileExpression(source) {
-  const expression = source.trim().replaceAll("^", "**");
+  const expression = normalizeExpression(source);
   if (!expression || expression.length > 120) throw new Error("式を入力してください（120文字以内）。");
-  if (!/^[0-9x+\-*/%().,\s_a-zA-Z**]+$/.test(expression)) throw new Error("使用できない文字が含まれています。");
+  if (!/^[0-9x+\-*/%().,\s_a-zA-Z]+$/.test(expression)) throw new Error("使用できない文字が含まれています。");
   const names = ["sin", "cos", "tan", "sqrt", "abs", "log", "exp", "floor", "ceil", "round", "PI", "E"];
   const identifiers = expression.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
   if (identifiers.some((name) => name !== "x" && !names.includes(name))) throw new Error("未対応の関数または変数です。");
@@ -39,6 +48,27 @@ function readView() {
     throw new Error("表示範囲の値を確認してください。");
   }
   view = next;
+}
+
+function renderFunctionList() {
+  expressionList.replaceChildren();
+  functions.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "expression-item";
+    row.innerHTML = `<span class="expression-swatch" style="background:${item.color}"></span><span class="expression-text">y = ${item.label}</span>`;
+    const remove = document.createElement("button");
+    remove.className = "remove-expression";
+    remove.type = "button";
+    remove.textContent = "削除";
+    remove.addEventListener("click", () => {
+      functions.splice(index, 1);
+      renderFunctionList();
+      draw();
+      setStatus("関数を削除しました");
+    });
+    row.append(remove);
+    expressionList.append(row);
+  });
 }
 
 function draw() {
@@ -69,32 +99,44 @@ function draw() {
   ctx.strokeStyle = "#63708a"; ctx.lineWidth = 1.5;
   if (minY <= 0 && maxY >= 0) { ctx.beginPath(); ctx.moveTo(0, py(0)); ctx.lineTo(width, py(0)); ctx.stroke(); }
   if (minX <= 0 && maxX >= 0) { ctx.beginPath(); ctx.moveTo(px(0), 0); ctx.lineTo(px(0), height); ctx.stroke(); }
-  ctx.strokeStyle = "#5267d9"; ctx.lineWidth = 2.5; ctx.beginPath();
-  let penDown = false;
-  for (let i = 0; i <= width; i += 1) {
-    const x = minX + i / width * (maxX - minX);
-    const y = fn(x);
-    const valid = y !== null && y >= minY - (maxY - minY) * 2 && y <= maxY + (maxY - minY) * 2;
-    if (!valid) { penDown = false; continue; }
-    if (penDown) ctx.lineTo(i, py(y)); else ctx.moveTo(i, py(y));
-    penDown = true;
-  }
-  ctx.stroke();
+  functions.forEach((item) => {
+    ctx.strokeStyle = item.color; ctx.lineWidth = 2.5; ctx.beginPath();
+    let penDown = false;
+    for (let i = 0; i <= width; i += 1) {
+      const y = item.fn(minX + i / width * (maxX - minX));
+      const valid = y !== null && y >= minY - (maxY - minY) * 2 && y <= maxY + (maxY - minY) * 2;
+      if (!valid) { penDown = false; continue; }
+      if (penDown) ctx.lineTo(i, py(y)); else ctx.moveTo(i, py(y));
+      penDown = true;
+    }
+    ctx.stroke();
+  });
 }
 
 function format(value) { return Number(value.toPrecision(3)).toString(); }
-function syncFields() { fields.forEach((field, index) => { field.value = view[index]; }); }
+function syncFields() { fields.forEach((field, index) => { field.value = format(view[index]); }); }
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
-  try { fn = compileExpression(expressionInput.value); readView(); draw(); setStatus("描画しました"); }
-  catch (error) { setStatus(error.message, true); }
+  try {
+    const label = normalizeExpression(expressionInput.value);
+    const fn = compileExpression(expressionInput.value);
+    readView();
+    if (!functions.some((item) => item.label === label)) functions.push({ label, fn, color: colors[functions.length % colors.length] });
+    renderFunctionList();
+    draw();
+    expressionInput.value = "";
+    setStatus("関数を追加しました");
+  } catch (error) { setStatus(error.message, true); }
 });
 document.querySelectorAll(".example").forEach((button) => button.addEventListener("click", () => {
   expressionInput.value = button.dataset.expression; form.requestSubmit();
 }));
-fields.forEach((field) => field.addEventListener("change", () => form.requestSubmit()));
+fields.forEach((field) => field.addEventListener("change", () => {
+  try { readView(); draw(); setStatus("表示範囲を更新しました"); } catch (error) { setStatus(error.message, true); }
+}));
 document.querySelector("#reset-view").addEventListener("click", () => { view = [...defaultView]; syncFields(); draw(); setStatus("表示範囲をリセットしました"); });
+document.querySelector("#clear-functions").addEventListener("click", () => { functions = []; renderFunctionList(); draw(); setStatus("関数をすべて削除しました"); });
 canvas.addEventListener("wheel", (event) => {
   event.preventDefault();
   const factor = event.deltaY < 0 ? 0.9 : 1.1;
@@ -104,5 +146,18 @@ canvas.addEventListener("wheel", (event) => {
   view = [cursorX + (view[0] - cursorX) * factor, cursorX + (view[1] - cursorX) * factor, cursorY + (view[2] - cursorY) * factor, cursorY + (view[3] - cursorY) * factor];
   syncFields(); draw();
 }, { passive: false });
+canvas.addEventListener("pointerdown", (event) => { dragStart = { x: event.clientX, y: event.clientY, view: [...view] }; canvas.setPointerCapture(event.pointerId); canvas.classList.add("dragging"); });
+canvas.addEventListener("pointermove", (event) => {
+  if (!dragStart) return;
+  const rect = canvas.getBoundingClientRect();
+  const dx = (event.clientX - dragStart.x) / rect.width * (dragStart.view[1] - dragStart.view[0]);
+  const dy = (event.clientY - dragStart.y) / rect.height * (dragStart.view[3] - dragStart.view[2]);
+  view = [dragStart.view[0] - dx, dragStart.view[1] - dx, dragStart.view[2] + dy, dragStart.view[3] + dy];
+  syncFields(); draw();
+});
+canvas.addEventListener("pointerup", () => { dragStart = null; canvas.classList.remove("dragging"); });
+canvas.addEventListener("pointercancel", () => { dragStart = null; canvas.classList.remove("dragging"); });
 window.addEventListener("resize", draw);
+functions.push({ label: "sin(x)", fn: compileExpression("sin(x)"), color: colors[0] });
+renderFunctionList();
 draw();

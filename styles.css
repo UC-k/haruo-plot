@@ -27,10 +27,17 @@ button:hover { background: #4053bf; }
 .range-grid { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); }
 .range-grid input { margin-top: 6px; }
 .toolbar { align-items: center; display: flex; gap: 14px; margin-top: 18px; }
+.expression-list { display: grid; gap: 8px; margin-top: 16px; }
+.expression-item { align-items: center; background: #f7f8fd; border-radius: 9px; display: flex; gap: 10px; padding: 8px 10px; }
+.expression-swatch { border-radius: 50%; height: 10px; width: 10px; }
+.expression-text { flex: 1; font-family: ui-monospace, monospace; font-size: .9rem; }
+.remove-expression { background: transparent; color: #8792a6; font-size: .8rem; padding: 3px 6px; }
+.remove-expression:hover { background: #e9edf5; color: #c13e51; }
 #status { color: #657086; font-size: .84rem; }
 #status.error { color: #c13e51; }
 .graph-panel { height: min(65vh, 620px); min-height: 360px; overflow: hidden; padding: 0; }
-#graph { display: block; height: 100%; width: 100%; }
+#graph { cursor: grab; display: block; height: 100%; width: 100%; }
+#graph.dragging { cursor: grabbing; }
 .footer-note { color: #8792a6; font-size: .8rem; text-align: center; }
 @media (max-width: 640px) {
   .app { padding-top: 28px; }
