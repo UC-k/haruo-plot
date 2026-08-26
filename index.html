@@ -14,6 +14,21 @@
         <p class="subtitle">関数を入力すると、すぐにグラフを描画できます。</p>
       </header>
 
+      <section class="panel music-panel" aria-label="数学的なBGM">
+        <div>
+          <p class="section-label">MATHEMATICAL BGM</p>
+          <strong>フィボナッチ・アルペジオ</strong>
+          <p class="music-description">フィボナッチ数列から音程を選ぶ生成音楽です。</p>
+        </div>
+        <div class="music-controls">
+          <button id="music-toggle" type="button">BGMを再生</button>
+          <label class="volume-control">音量
+            <input id="music-volume" type="range" min="0" max="100" value="18" />
+          </label>
+          <span id="music-status" role="status">停止中</span>
+        </div>
+      </section>
+
       <section class="panel controls" aria-label="グラフ設定">
         <form id="plot-form">
           <label for="expression">関数 f(x)</label>

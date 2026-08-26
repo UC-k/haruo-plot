@@ -4,12 +4,19 @@ const form = document.querySelector("#plot-form");
 const expressionInput = document.querySelector("#expression");
 const expressionList = document.querySelector("#expression-list");
 const status = document.querySelector("#status");
+const musicToggle = document.querySelector("#music-toggle");
+const musicVolume = document.querySelector("#music-volume");
+const musicStatus = document.querySelector("#music-status");
 const fields = ["min-x", "max-x", "min-y", "max-y"].map((id) => document.querySelector(`#${id}`));
 const colors = ["#5267d9", "#e05d75", "#21a179", "#ed9b40", "#8c5dcc"];
 const defaultView = [-10, 10, -5, 5];
 let view = [...defaultView];
 let functions = [];
 let dragStart = null;
+let audioContext = null;
+let masterGain = null;
+let musicTimer = null;
+let musicStep = 0;
 
 function normalizeExpression(source) {
   let expression = source.trim().replace(/^\s*y\s*=\s*/i, "").replaceAll("^", "**");
@@ -116,6 +123,64 @@ function draw() {
 function format(value) { return Number(value.toPrecision(3)).toString(); }
 function syncFields() { fields.forEach((field, index) => { field.value = format(view[index]); }); }
 
+function getAudioContext() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) throw new Error("このブラウザはWeb Audio APIに対応していません。");
+  if (!audioContext) {
+    audioContext = new AudioContext();
+    masterGain = audioContext.createGain();
+    masterGain.gain.value = Number(musicVolume.value) / 100;
+    masterGain.connect(audioContext.destination);
+  }
+  return audioContext;
+}
+
+function playTone(frequency, duration, startTime, type = "sine") {
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.2, startTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  oscillator.connect(gain);
+  gain.connect(masterGain);
+  oscillator.start(startTime);
+  oscillator.stop(startTime + duration + 0.03);
+}
+
+function scheduleMusicStep() {
+  const fibonacci = [1, 1, 2, 3, 5, 8, 13, 21];
+  const scale = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33];
+  const note = scale[fibonacci[musicStep % fibonacci.length] % scale.length];
+  const now = audioContext.currentTime;
+  playTone(note, 0.25, now, "triangle");
+  if (musicStep % 4 === 0) playTone(note / 2, 0.45, now, "sine");
+  musicStep += 1;
+}
+
+async function toggleMusic() {
+  try {
+    const context = getAudioContext();
+    if (musicTimer) {
+      clearInterval(musicTimer);
+      musicTimer = null;
+      musicToggle.textContent = "BGMを再生";
+      musicStatus.textContent = "停止中";
+      return;
+    }
+    await context.resume();
+    musicStep = 0;
+    scheduleMusicStep();
+    musicTimer = setInterval(scheduleMusicStep, 320);
+    musicToggle.textContent = "BGMを停止";
+    musicStatus.textContent = "再生中";
+  } catch (error) {
+    musicStatus.textContent = "利用不可";
+    setStatus(error.message, true);
+  }
+}
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   try {
@@ -157,6 +222,10 @@ canvas.addEventListener("pointermove", (event) => {
 });
 canvas.addEventListener("pointerup", () => { dragStart = null; canvas.classList.remove("dragging"); });
 canvas.addEventListener("pointercancel", () => { dragStart = null; canvas.classList.remove("dragging"); });
+musicToggle.addEventListener("click", toggleMusic);
+musicVolume.addEventListener("input", () => {
+  if (masterGain) masterGain.gain.value = Number(musicVolume.value) / 100;
+});
 window.addEventListener("resize", draw);
 functions.push({ label: "sin(x)", fn: compileExpression("sin(x)"), color: colors[0] });
 renderFunctionList();

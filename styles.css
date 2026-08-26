@@ -13,6 +13,13 @@ h1 { font-size: clamp(2.2rem, 6vw, 4.4rem); letter-spacing: -0.06em; line-height
 .subtitle { color: #657086; margin: 14px 0 0; }
 .panel { background: #fff; border: 1px solid #e3e8f2; border-radius: 18px; box-shadow: 0 12px 30px #334a7610; }
 .controls { margin-bottom: 18px; padding: 22px; }
+.music-panel { align-items: center; display: flex; justify-content: space-between; margin-bottom: 18px; padding: 16px 22px; }
+.section-label { color: #5267d9; font-size: .68rem; font-weight: 800; letter-spacing: .14em; margin: 0 0 4px; }
+.music-description { color: #8792a6; font-size: .78rem; margin: 5px 0 0; }
+.music-controls { align-items: center; display: flex; gap: 14px; }
+.volume-control { align-items: center; display: flex; gap: 8px; white-space: nowrap; }
+.volume-control input { accent-color: #5267d9; padding: 0; width: 100px; }
+#music-status { color: #657086; font-size: .8rem; min-width: 42px; }
 label { color: #39455b; display: block; font-size: 0.82rem; font-weight: 700; }
 .input-row { align-items: center; display: flex; gap: 10px; margin-top: 8px; }
 .prefix { color: #718096; font-family: ui-monospace, monospace; font-size: 1.1rem; }
@@ -45,4 +52,6 @@ button:hover { background: #4053bf; }
   .input-row { align-items: stretch; flex-wrap: wrap; }
   .input-row input { flex: 1 1 70%; }
   .input-row button { flex: 1 1 100%; }
+  .music-panel { align-items: stretch; flex-direction: column; gap: 14px; }
+  .music-controls { justify-content: space-between; }
 }
