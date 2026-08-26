@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>haruo plot</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <p class="eyebrow">FUNCTION GRAPHING MVP</p>
+        <h1>haruo plot</h1>
+        <p class="subtitle">関数を入力すると、すぐにグラフを描画できます。</p>
+      </header>
+
+      <section class="panel controls" aria-label="グラフ設定">
+        <form id="plot-form">
+          <label for="expression">関数 f(x)</label>
+          <div class="input-row">
+            <span class="prefix">y =</span>
+            <input id="expression" name="expression" value="sin(x)" autocomplete="off" spellcheck="false" />
+            <button type="submit">描画</button>
+          </div>
+          <p class="hint">例: <button type="button" class="example" data-expression="x^2">x^2</button>
+            <button type="button" class="example" data-expression="sin(x)">sin(x)</button>
+            <button type="button" class="example" data-expression="sqrt(abs(x))">sqrt(abs(x))</button></p>
+        </form>
+
+        <div class="range-grid">
+          <label>最小 x<input id="min-x" type="number" value="-10" step="1" /></label>
+          <label>最大 x<input id="max-x" type="number" value="10" step="1" /></label>
+          <label>最小 y<input id="min-y" type="number" value="-5" step="1" /></label>
+          <label>最大 y<input id="max-y" type="number" value="5" step="1" /></label>
+        </div>
+        <div class="toolbar">
+          <button id="reset-view" type="button" class="secondary">表示範囲をリセット</button>
+          <span id="status" role="status">準備完了</span>
+        </div>
+      </section>
+
+      <section class="panel graph-panel">
+        <canvas id="graph" aria-label="関数グラフ"></canvas>
+      </section>
+      <p class="footer-note">マウスホイールでズームできます。式は x を変数として入力してください。</p>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

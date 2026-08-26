@@ -1,0 +1,41 @@
+:root {
+  color: #172033;
+  background: #f3f6fb;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+.app { width: min(100% - 32px, 1080px); margin: 0 auto; padding: 48px 0 36px; }
+.hero { margin-bottom: 24px; }
+.eyebrow { color: #5267d9; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.16em; margin: 0 0 8px; }
+h1 { font-size: clamp(2.2rem, 6vw, 4.4rem); letter-spacing: -0.06em; line-height: 1; margin: 0; }
+.subtitle { color: #657086; margin: 14px 0 0; }
+.panel { background: #fff; border: 1px solid #e3e8f2; border-radius: 18px; box-shadow: 0 12px 30px #334a7610; }
+.controls { margin-bottom: 18px; padding: 22px; }
+label { color: #39455b; display: block; font-size: 0.82rem; font-weight: 700; }
+.input-row { align-items: center; display: flex; gap: 10px; margin-top: 8px; }
+.prefix { color: #718096; font-family: ui-monospace, monospace; font-size: 1.1rem; }
+input { border: 1px solid #d6deeb; border-radius: 9px; color: #172033; font: inherit; outline: none; padding: 10px 12px; transition: border-color .15s, box-shadow .15s; width: 100%; }
+input:focus { border-color: #5267d9; box-shadow: 0 0 0 3px #5267d922; }
+button { background: #5267d9; border: 0; border-radius: 9px; color: white; cursor: pointer; font: inherit; font-weight: 700; padding: 11px 18px; white-space: nowrap; }
+button:hover { background: #4053bf; }
+.secondary { background: #edf0ff; color: #4053bf; font-size: .85rem; }
+.secondary:hover { background: #e0e5ff; }
+.hint { color: #8792a6; font-size: .8rem; margin: 10px 0 20px; }
+.example { background: none; color: #5267d9; font-size: inherit; padding: 0 3px; text-decoration: underline; }
+.range-grid { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); }
+.range-grid input { margin-top: 6px; }
+.toolbar { align-items: center; display: flex; gap: 14px; margin-top: 18px; }
+#status { color: #657086; font-size: .84rem; }
+#status.error { color: #c13e51; }
+.graph-panel { height: min(65vh, 620px); min-height: 360px; overflow: hidden; padding: 0; }
+#graph { display: block; height: 100%; width: 100%; }
+.footer-note { color: #8792a6; font-size: .8rem; text-align: center; }
+@media (max-width: 640px) {
+  .app { padding-top: 28px; }
+  .range-grid { grid-template-columns: repeat(2, 1fr); }
+  .input-row { align-items: stretch; flex-wrap: wrap; }
+  .input-row input { flex: 1 1 70%; }
+  .input-row button { flex: 1 1 100%; }
+}
